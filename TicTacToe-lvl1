@@ -1,0 +1,76 @@
+import random
+
+s = {'a1':' ', 'a2':' ', 'a3':' ', 'b1':' ', 'b2':' ', 'b3':' ', 'c1':' ', 'c2':' ', 'c3':' '} #storing the values in each of the nine spaces.
+availableSpots=['a1','a2','a3','b1','b2','b3','c1','c2','c3'] #keeping track of the spaces that are not yet occupied.
+win=0 #variable to keep track of whether or not the game has been won.
+
+#Clarify which spot is given which name
+def showSpots():
+    print("a1|a2|a3","b1|b2|b3","c1|c2|c3", sep='\n')
+
+#Show the board after every move
+def board():
+    print(s['a1'],s['a2'],s['a3'], sep=' | ')
+    print(s['b1'],s['b2'],s['b3'], sep=' | ')
+    print(s['c1'],s['c2'],s['c3'], sep=' | ')
+
+#Check whether the latest move has won the game or not. Individually. Painstakingly.
+def winCheck(sq):
+    global win
+    if sq == 'a1':
+        if s['a1']==s['a2']==s['a3'] or s['a1']==s['b1']==s['c1'] or s['a1']==s['b2']==s['c3']:
+            win+=1
+    elif sq == 'a2':
+        if s['a1']==s['a2']==s['a3'] or s['a2']==s['b2']==s['c2']:
+            win+=1
+    elif sq == 'a3':
+        if s['a1']==s['a2']==s['a3'] or s['a3']==s['b3']==s['c3'] or s['a3']==s['b2']==s['c1']:
+            win+=1
+    elif sq == 'b1':
+        if s['b1']==s['b2']==s['b3'] or s['a1']==s['b1']==s['c1']:
+            win+=1
+    elif sq == 'b2':
+        if s['b1']==s['b2']==s['b3'] or s['a1']==s['b2']==s['c3'] or s['a3']==s['b2']==s['c1'] or s['a2']==s['b2']==s['c2']:
+            win+=1
+    elif sq == 'b3':
+        if s['b1']==s['b2']==s['b3'] or s['a3']==s['b3']==s['c3']:
+            win+=1
+    elif sq == 'c1':
+        if s['a1']==s['b1']==s['c1'] or s['c1']==s['c2']==s['c3'] or s['a3']==s['b2']==s['c1']:
+            win+=1
+    elif sq == 'c2':
+        if s['c1']==s['c2']==s['c3'] or s['a2']==s['b2']==s['c2']:
+            win+=1
+    elif sq == 'c3':
+        if s['c1']==s['c2']==s['c3'] or s['a3']==s['b3']==s['c3'] or s['a1']==s['b2']==s['c3']:
+            win+=1
+    if win==1:
+        print(s[sq], "wins! Game Over.")
+
+showSpots()
+
+#Beginning instructions
+print("enter 'show' to view the names of the spaces again.")
+print("X goes first.")
+
+def turn():
+    while win==0:
+        #player turn
+        move = input("Your move. Where do you want to place your token?")
+        if move == 'show':
+            showSpots()
+            turn()
+        else:
+            s[move]='X'
+            availableSpots.pop(availableSpots.index(move))
+            board()
+            winCheck(move)
+        #computer turn
+        print("My move.")
+        move=random.choice(availableSpots)
+        availableSpots.pop(availableSpots.index(move))
+        s[move]='O'
+        board()
+        winCheck(move)
+    
+turn()
