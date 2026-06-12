@@ -42,16 +42,16 @@ def turn():
         move = input("Your move. Where do you want to place your token?")
         if move == 'show':
             showSpots()
-            turn()
+            continue
         else:
             try:
                 s[int(move[0])][int(move[1])]='X'
-                availableSpots.pop(availableSpots.index(move))
+                availableSpots.remove(move)
                 board()
                 winCheck(move)
             except ValueError:
                 print("Ivaild option entered. Please try again.")
-                turn()
+                continue
         #computer turn
         if win==1:
             break
@@ -61,7 +61,7 @@ def turn():
         else:
             print("My move.")
             move=random.choice(availableSpots)
-            availableSpots.pop(availableSpots.index(move))
+            availableSpots.remove(move)
             s[int(move[0])][int(move[1])]='O'
             board()
             winCheck(move)
