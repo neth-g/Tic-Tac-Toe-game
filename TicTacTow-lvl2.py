@@ -1,117 +1,98 @@
 import random
 
-s = [[' ',' ',' '],[' ',' ',' '],[' ',' ',' ']] #matrix for 9 spaces of the board
-availableSpots=['00','01','02','10','11','12','20','21','22'] #keeping track of the spaces that are not yet occupied.
-win=0 #variable to keep track of whether or not the game has been won.
-blockSpots=[]
-winSpots=[]
-move=' '
+# Game State
+board_state = [[' ' for _ in range(3)] for _ in range(3)]
+available_spots = ['00', '01', '02', '10', '11', '12', '20', '21', '22']
 
-#Clarify which spot is given which name
-def showSpots():
-    print("00|01|02","10|11|12","20|21|22", sep='\n')
+def show_spots():
+    print("\nSpot Coordinates:")
+    print("00 | 01 | 02", "10 | 11 | 12", "20 | 21 | 22", sep='\n')
+    print("-" * 12)
 
-#Show the board after every move
-def board():
-    for i in s:
-        print(i[0], i[1], i[2], sep=' | ')
+def print_board():
+    print()
+    for row in board_state:
+        print(" " + " | ".join(row))
+    print()
 
-#Check whether the latest move has won the game or not.
-def winCheck(move):
-    global win
-    i = int(move[0])
-    j = int(move[1])
-    # check column corresponding to the move
-    if s[0][j]==s[1][j]==s[2][j]:
-        win+=1
-    elif s[i][0]==s[i][1]==s[i][2]:
-        win+=1
-    elif move=='00' or move=='11' or move=='22':
-        if s[0][0]==s[1][1]==s[2][2]:
-            win+=1
-    elif move=='02' or move=='11' or move=='20':
-        if s[0][2]==s[1][1]==s[2][0]:
-            win+=1
+def is_winner(board, player):
+    """Pure function to determine if the given player has won."""
+    # Check rows and columns
+    for i in range(3):
+        if all(board[i][j] == player for j in range(3)): return True
+        if all(board[j][i] == player for j in range(3)): return True
+    # Check diagonals
+    if board[0][0] == board[1][1] == board[2][2] == player: return True
+    if board[0][2] == board[1][1] == board[2][0] == player: return True
+    return False
 
+def get_ai_move():
+    """Evaluates options using look-ahead without mutating global state."""
+    win_spots = []
+    block_spots = []
+
+    for move in available_spots:
+        r, c = int(move[0]), int(move[1])
+        
+        # 1. Can AI ('O') win right here?
+        board_state[r][c] = 'O'
+        if is_winner(board_state, 'O'):
+            win_spots.append(move)
+        board_state[r][c] = ' ' # Undo
+
+        # 2. Does AI need to block Player ('X')?
+        board_state[r][c] = 'X'
+        if is_winner(board_state, 'X'):
+            block_spots.append(move)
+        board_state[r][c] = ' ' # Undo
+
+    if win_spots:   return random.choice(win_spots)
+    if block_spots: return random.choice(block_spots)
+    return random.choice(available_spots)
+
+def play_game():
+    show_spots()
+    print("X goes first. Enter 'show' to view layout coordinates anytime.")
     
-showSpots()
-
-def nearWin(availableSpots):
-    global blockSpots
-    global winSpots
-    global win
-    winSpots=[]
-    blockSpots=[]
-    for mov in availableSpots:
-        i = int(mov[0])
-        j = int(mov[1])
-        s[i][j]='O'
-        winCheck(mov)
-        if win>=1:
-            winSpots.append(mov)
-            win=0
-        else:
-            pass
-        s[i][j]=' '
-    for mov in availableSpots:
-        i = int(mov[0])
-        j = int(mov[1])
-        s[i][j]='X'
-        winCheck(mov)
-        if win>=1:
-            blockSpots.append(mov)
-            win=0
-        else:
-            pass
-        s[i][j]=' '
-    
-
-#During a turn
-def turn():
-    global move
-    while win==0:
-        #player turn
-        move = input("Your move. Where do you want to place your token?")
+    while True:
+        # --- PLAYER TURN ---
+        move = input("Your move (X) - Choose spot: ").strip()
+        
         if move == 'show':
-            showSpots()
+            show_spots()
             continue
-        else:
-            try:
-                s[int(move[0])][int(move[1])]='X'
-                availableSpots.remove(move)
-                board()
-                winCheck(move)
-            except ValueError:
-                print("Ivaild option entered. Please try again.")
-                continue
-        #computer turn
-        if win==1:
+            
+        if move not in available_spots:
+            print("Invalid or occupied spot! Try again.")
+            continue
+
+        # Execute move
+        available_spots.remove(move)
+        board_state[int(move[0])][int(move[1])] = 'X'
+        print_board()
+
+        if is_winner(board_state, 'X'):
+            print("Game Over. X wins!")
             break
-        elif availableSpots==[]:
+            
+        if not available_spots:
             print("It's a draw!")
             break
-        else:
-            print("My move.")
-            nearWin(availableSpots)
-            if winSpots!=[]:
-                move=random.choice(winSpots)
-            elif blockSpots != []:
-                move=random.choice(blockSpots)
-            else:
-                move=random.choice(availableSpots)
-            availableSpots.remove(move)
-            s[int(move[0])][int(move[1])]='O'
-            board()
-            winCheck(move)
-                
 
-#Beginning instructions
-print("enter 'show' to view the names of the spaces again.")
-print("X goes first.")
+        # --- AI TURN ---
+        print("My move (O):")
+        ai_move = get_ai_move()
+        available_spots.remove(ai_move)
+        board_state[int(ai_move[0])][int(ai_move[1])] = 'O'
+        print_board()
 
-#main
-    
-turn()
-if win>0:
-    print("Game over.")
-    print(s[int(move[0])][int(move[1])], "wins. ")
+        if is_winner(board_state, 'O'):
+            print("Game Over. O wins!")
+            break
+            
+        if not available_spots:
+            print("It's a draw!")
+            break
+
+if __name__ == '__main__':
+    play_game()
