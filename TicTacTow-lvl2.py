@@ -27,7 +27,7 @@ def is_winner(board, player):
     return False
 
 def get_ai_move():
-    """Evaluates options using look-ahead without mutating global state."""
+    """Evaluates options using a virtual clone of the board layout."""
     win_spots = []
     block_spots = []
 
@@ -35,16 +35,16 @@ def get_ai_move():
         r, c = int(move[0]), int(move[1])
         
         # 1. Can AI ('O') win right here?
-        board_state[r][c] = 'O'
-        if is_winner(board_state, 'O'):
+        virtual_board_win = [row[:] for row in board_state]  # Create virtual board clone
+        virtual_board_win[r][c] = 'O'                         # Simulate move on clone
+        if is_winner(virtual_board_win, 'O'):
             win_spots.append(move)
-        board_state[r][c] = ' ' # Undo
 
         # 2. Does AI need to block Player ('X')?
-        board_state[r][c] = 'X'
-        if is_winner(board_state, 'X'):
+        virtual_board_block = [row[:] for row in board_state] # Create virtual board clone
+        virtual_board_block[r][c] = 'X'                       # Simulate move on clone
+        if is_winner(virtual_board_block, 'X'):
             block_spots.append(move)
-        board_state[r][c] = ' ' # Undo
 
     if win_spots:   return random.choice(win_spots)
     if block_spots: return random.choice(block_spots)
