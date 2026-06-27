@@ -1,117 +1,107 @@
 import random
+import copy 
 
-s = [[' ',' ',' '],[' ',' ',' '],[' ',' ',' ']] #matrix for 9 spaces of the board
-availableSpots=['00','01','02','10','11','12','20','21','22'] #keeping track of the spaces that are not yet occupied.
-win=0 #variable to keep track of whether or not the game has been won.
-blockSpots=[]
-winSpots=[]
-move=' '
+def play_game():
+    #Setup
+    board_state = [[' ',' ',' '],[' ',' ',' '],[' ',' ',' ']] #matrix for 9 spaces of the board
+    available_spots=['00','01','02','10','11','12','20','21','22'] #keeping track of the spaces that are not yet occupied.
+    #Instructions for the beginning
+    print("Welcome to tic tac toe.")
+    print("These are the board coordinates. We'll be using these to identify where we move.")
+    show_spots()
+    show_board(board_state)
+    print("X goes first. You're playing X.")
+    #Turn loop
+    while True:    
+        # PLAYER TURN
+        result = player_turn(board_state, available_spots)
+        if result == 'X': 
+            print("You win! Game over!")
+            break
+        elif not available_spots: 
+            print("It's a draw. Game over.")
+            break
+        elif result == 'try again':
+            continue
+        # COMPUTER TURN
+        result = ai_turn(board_state, available_spots)
+        if result == 'O':
+            print("I win! Game over.")
+            break
+        # Computer does not have a check for draw because computer's turn will never cause a draw if player starts.
+
 
 #Clarify which spot is given which name
-def showSpots():
+def show_spots():
     print("00|01|02","10|11|12","20|21|22", sep='\n')
 
 #Show the board after every move
-def board():
-    for i in s:
-        print(i[0], i[1], i[2], sep=' | ')
+def show_board(board):
+    for i in board:
+        print(i[0], i[1], i[2], sep = ' | ')
 
 #Check whether the latest move has won the game or not.
-def winCheck(move):
-    global win
-    i = int(move[0])
-    j = int(move[1])
-    # check column corresponding to the move
-    if s[0][j]==s[1][j]==s[2][j]:
-        win+=1
-    elif s[i][0]==s[i][1]==s[i][2]:
-        win+=1
-    elif move=='00' or move=='11' or move=='22':
-        if s[0][0]==s[1][1]==s[2][2]:
-            win+=1
-    elif move=='02' or move=='11' or move=='20':
-        if s[0][2]==s[1][1]==s[2][0]:
-            win+=1
+def is_won(board, token):
+    for i in range(3):
+        if all(board[i][j] == token for j in range(3)): return True #rows
+        if all(board[j][i] == token for j in range(3)): return True #columns
+    if all(board[j][j] == token for j in range(3)): return True #left top to right bottom
+    if board[2][0] == board[1][1] == board[0][2] == token: return True #right top to left bottom
+    else: return False
 
     
-showSpots()
+def ai_move(board, available_spots):
+    win_spots = []
+    block_spots = []
+    # checking all possibile next moves of computer
+    for spot in available_spots:
+        # creating a virtual board
+        virtual_board = copy.deepcopy(board)
+        i = int(spot[0])
+        j = int(spot[1])
+        virtual_board[i][j]='O'
+        if is_won(virtual_board, 'O'): win_spots.append(spot)
+    # checking all possible next moves of player
+    for spot in available_spots:
+        # creating a virtual board
+        virtual_board = copy.deepcopy(board)
+        i = int(spot[0])
+        j = int(spot[1])
+        virtual_board[i][j]='X'
+        if is_won(virtual_board, 'X'): block_spots.append(spot)
+    # what to return as computer's next move
+    if win_spots: return random.choice(win_spots)
+    elif block_spots: return random.choice(block_spots)
+    else: return random.choice(available_spots)
 
-def nearWin(availableSpots):
-    global blockSpots
-    global winSpots
-    global win
-    winSpots=[]
-    blockSpots=[]
-    for mov in availableSpots:
-        i = int(mov[0])
-        j = int(mov[1])
-        s[i][j]='O'
-        winCheck(mov)
-        if win>=1:
-            winSpots.append(mov)
-            win=0
-        else:
-            pass
-        s[i][j]=' '
-    for mov in availableSpots:
-        i = int(mov[0])
-        j = int(mov[1])
-        s[i][j]='X'
-        winCheck(mov)
-        if win>=1:
-            blockSpots.append(mov)
-            win=0
-        else:
-            pass
-        s[i][j]=' '
-    
-
-#During a turn
-def turn():
-    global move
-    while win==0:
-        #player turn
-        move = input("Your move. Where do you want to place your token?")
+#player's turn
+def player_turn(board, available_spots):
+    while True:
+        print("Your move.")
+        move = input("Where do you want to place your token? 'X': ")
         if move == 'show':
-            showSpots()
-            continue
+            show_spots(board)
+        elif move not in available_spots:
+            print("Unrecognised response. Please try again.")
         else:
-            try:
-                s[int(move[0])][int(move[1])]='X'
-                availableSpots.remove(move)
-                board()
-                winCheck(move)
-            except ValueError:
-                print("Ivaild option entered. Please try again.")
-                continue
-        #computer turn
-        if win==1:
-            break
-        elif availableSpots==[]:
-            print("It's a draw!")
-            break
-        else:
-            print("My move.")
-            nearWin(availableSpots)
-            if winSpots!=[]:
-                move=random.choice(winSpots)
-            elif blockSpots != []:
-                move=random.choice(blockSpots)
-            else:
-                move=random.choice(availableSpots)
-            availableSpots.remove(move)
-            s[int(move[0])][int(move[1])]='O'
-            board()
-            winCheck(move)
-                
+            i,j = int(move[0]), int(move[1])
+            board[i][j] = 'X'
+            show_board()
+            available_spots.remove(move)
+            if is_won(board, 'X'): return "X"
+            else: return "continue"
 
-#Beginning instructions
-print("enter 'show' to view the names of the spaces again.")
-print("X goes first.")
-
-#main
+#computer's turn
+def ai_turn(board, available_spots):
+    print("My turn.")
+    move = ai_move(board, available_spots)
+    i,j = int(move[0]), int(move[1])
+    board[i][j] = 'O'
+    show_board()
+    available_spots.remove(move)
+    if is_won(board, 'O'): return "O"
+    else: return "continue"
     
-turn()
-if win>0:
-    print("Game over.")
-    print(s[int(move[0])][int(move[1])], "wins. ")
+
+play_game()
+
